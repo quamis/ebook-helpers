@@ -16,7 +16,8 @@ if args['input'] is None:
 if args['output'] is None:
     args['output'] = "%s.%s" % (os.path.splitext(os.path.basename(args['input']))[0], args['toformat'])
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.WARNING)
 
 # load the cloudconvert library
 logging.info('Import python-cloudconvert') 
@@ -29,7 +30,7 @@ process = CloudConvert.ConversionProcess(apikey)
 
 # This should autodetect file extension
 logging.info('Initialize convertor')
-process.init(args['input'], os.path.basename(args['output']), fromformat = args['fromformat'], toformat = args['toformat'])
+process.init(args['input'], os.path.basename(args['output']), fromformat=args['fromformat'], toformat=args['toformat'])
 
 # This step uploads the file and starts the conversion
 logging.info('Start convertor')
@@ -38,7 +39,7 @@ process.start()
 # Will block until file is done processing. You can set
 # the interval between checks.
 logging.info('Wait for convertor to finish')
-process.wait_for_completion(check_interval=1)
+process.wait_for_completion(check_interval=0.75)
 
 logging.info('Write data to %s' % args['output'])
 # Returns a file-like obj to download the processed file
