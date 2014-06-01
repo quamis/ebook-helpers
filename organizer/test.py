@@ -3,6 +3,7 @@ import os, sys
 import logging
 import re
 import collections
+import argparse
 
 class authorWalker(object):
     def __init__(self, path):
@@ -12,7 +13,9 @@ class authorWalker(object):
         self.listAuthors()
         
     def listAuthors(self):
-        for author in os.listdir(self.path):
+        authors = os.listdir(self.path)
+        authors.sort()
+        for author in authors:
             self._authorFound(self.path, author)
     
     def _authorFound(self, path, author):
@@ -26,14 +29,44 @@ class AuthorInfo(object):
         self.raw = author
         self.firstName = None
         self.lastName = None
+        self.associates = []
+        self.authors = 0
         
     def extract(self):
-        m = re.match("^(?P<firstName>[\w\s\.]+|[A-Z]\.), (?P<lastName>[\w\s\.]+|[A-Z]\.)$", self.raw, re.UNICODE)
-        if m is None:
+        if self.raw in ('Stendhal', 'Tobias', 'Homer', 'Perpessicius', 'Platon'):
+            self.firstName =  self.raw
+            self.lastName = ''
+            return
+        
+        found = True
+        if not found:
+            m = re.search('^(?P<firstName>[\w\s\.\-]+|[A-Z]\.), (?P<lastName>[\w\s\.]+|[A-Z]\.)$', self.raw.decode('utf-8'), re.UNICODE)
+            if m is None:
+                found = false
+            else:
+                self.authors = 1
+                self.firstName = m.group('firstName')
+                self.lastName = m.group('lastName')
+        
+        # lookup 2 authors
+        if not found:
+            m = re.search('^(?P<firstName1>[\w\s\.\-]+|[A-Z]\.), (?P<lastName1>[\w\s\.]+|[A-Z]\.) \& (?P<firstName2>[\w\s\.\-]+|[A-Z]\.), (?P<lastName2>[\w\s\.]+|[A-Z]\.)$', self.raw.decode('utf-8'), re.UNICODE)
+            if m is None:
+                found = false
+            else:
+                self.authors = 2
+                self.firstName = m.group('firstName1')
+                self.lastName = m.group('lastName1')
+                
+                a = AuthorInfo()
+                a.firstName = m.group('firstName2')
+                a.lastName = m.group('lastName2')
+                self.associates.append(a)
+                
+        if not found:
             raise AuthorInfoException("Invalid author name")
         
-        self.firstName = m.group('firstName')
-        self.lastName = m.group('lastName')
+        
         
 class authorFolderFormatValidator(authorWalker):
     def _authorFound(self, path, author):
@@ -41,7 +74,7 @@ class authorFolderFormatValidator(authorWalker):
             a = AuthorInfo(author)
             a.extract()
         except AuthorInfoException, e:
-            print "'%s' has an invalid format. Please fix it" % (author)
+            print "'%s' has an invalid format. Please fix it(%s)" % (author, e)
             return False
         
         self.checkFolderStructure(a, author)
@@ -113,11 +146,12 @@ class authorFolderFormatValidator(authorWalker):
             
         eln = re.sub("[\s]*(?P<ext>\.[a-zA-Z]{3,4})$", "\g<ext>", eln, re.UNICODE)
             
-        print "'%s' --> '%s'" % (el, eln)
+        #if el!=eln:
+        #    print "'%s' --> '%s'" % (el, eln)
 
         
     def checkFolderStructure(self, authorInfo, path, depth=0):
-        print "  %s%s" % ("  "*depth, path)
+        #print "  %s%s" % ("  "*depth, path)
         p = self.path+path+'/'
         for el in os.listdir(p):
             if os.path.isdir(p+el):
@@ -147,14 +181,14 @@ class authorFolderStats(authorWalker):
         return True
     
     def gatherAuthorInfo(self, path, depth=0):
-        print "  %s%s" % ("  "*depth, path)
+        #print "  %s%s" % ("  "*depth, path)
         p = self.path+path+'/'
         for el in os.listdir(p):
             if os.path.isdir(p+el):
-                print "      %s%s/" % ("    "*depth, el)
+                #print "      %s%s/" % ("    "*depth, el)
                 self.gatherAuthorInfo(path+'/'+el, depth+1)
             else:
-                print "      %s%s" % ("    "*depth, el)
+                #print "      %s%s" % ("    "*depth, el)
                 self.stats['files']+=1
                 
                 ext = os.path.splitext(el)[1]
@@ -164,9 +198,14 @@ class authorFolderStats(authorWalker):
         
         
 if __name__ == '__main__':
+    # handle args
+    parser = argparse.ArgumentParser(description='Check the specified path and report invalid files')
+    parser.add_argument('--path',  '-p',  dest='path',   action='store', type=str, default=None,  help='TODO')
+    args = vars(parser.parse_args())
+
     ## first run "export PYTHONIOENCODING=utf-8"
     
-    wlk = authorFolderFormatValidator(u'/media/BIG/owncloud/lucian.sirbu/files/books/all-01/')
+    wlk = authorFolderFormatValidator(args['path'])
     wlk.run()
     
     #wlk = authorFolderStats(u'/media/BIG/owncloud/lucian.sirbu/files/books/all-01/')
