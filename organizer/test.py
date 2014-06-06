@@ -4,6 +4,7 @@ import logging
 import re
 import collections
 import argparse
+import requests
 
 class authorWalker(object):
     def __init__(self, path):
@@ -178,7 +179,19 @@ class authorFolderStats(authorWalker):
         self.reset()
         self.gatherAuthorInfo(author)
         #print "%s: %s" % (author, self.stats)
+        
+        authorInfo = authorFolderInfo_Wikipedia(author)
+        authorInfo.getInfo()
+        #print authorInfo.hits
+        #print authorInfo.suggestions
+        
         print "%s: %d files (%s)" % (author, self.stats['files'], ",".join(self.stats['fileTypes'].keys()).replace(".", ""))
+        if authorInfo.hits<3:
+            print "    got %d hits on wikipedia. You should check him out" % (authorInfo.hits)
+            
+        if len(authorInfo.suggestions):
+            print "    got suggestions: %s" % (authorInfo.suggestions)
+        
         return True
     
     def gatherAuthorInfo(self, path, depth=0):
@@ -196,6 +209,32 @@ class authorFolderStats(authorWalker):
                 if ext not in self.stats['fileTypes']:
                     self.stats['fileTypes'][ext] = 0
                 self.stats['fileTypes'][ext]+=1
+
+class authorFolderInfo_Wikipedia(object):
+    def __init__(self, author):
+        self.author = author
+        self.suggestions = []
+        self.hits = 0
+        self.description = ""
+        
+    def getInfo(self):
+        params = {
+            'action':'query',
+            'list':'search',
+            'format':'json',
+            'srlimit':'10',
+            'srwhat':'text',
+            'srprop':'score',
+            'srprop':'size',
+            'srsearch':self.author,
+        }
+        r = requests.get("http://en.wikipedia.org/w/api.php", params=params)
+
+        json = r.json()
+        self.hits = json['query']['searchinfo']['totalhits']
+        
+        if u'suggestion' in json['query']['searchinfo']:
+            self.suggestions.append(json['query']['searchinfo'][u'suggestion'])
         
         
 if __name__ == '__main__':
