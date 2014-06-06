@@ -177,7 +177,8 @@ class authorFolderStats(authorWalker):
     def _authorFound(self, path, author):
         self.reset()
         self.gatherAuthorInfo(author)
-        print self.stats
+        #print "%s: %s" % (author, self.stats)
+        print "%s: %d files (%s)" % (author, self.stats['files'], ",".join(self.stats['fileTypes'].keys()).replace(".", ""))
         return True
     
     def gatherAuthorInfo(self, path, depth=0):
@@ -205,9 +206,9 @@ if __name__ == '__main__':
 
     ## first run "export PYTHONIOENCODING=utf-8"
     
-    wlk = authorFolderFormatValidator(args['path'])
-    wlk.run()
-    
-    #wlk = authorFolderStats(u'/media/BIG/owncloud/lucian.sirbu/files/books/all-01/')
+    #wlk = authorFolderFormatValidator(args['path'])
     #wlk.run()
+    
+    wlk = authorFolderStats(args['path'])
+    wlk.run()
 
