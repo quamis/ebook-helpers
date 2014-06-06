@@ -186,11 +186,15 @@ class authorFolderStats(authorWalker):
         #print authorInfo.suggestions
         
         print "%s: %d files (%s)" % (author, self.stats['files'], ",".join(self.stats['fileTypes'].keys()).replace(".", ""))
-        if authorInfo.hits<3:
-            print "    got %d hits on wikipedia. You should check him out" % (authorInfo.hits)
+        if authorInfo.hits==0:
+            print "    got no hits on wikipedia. This author name might be misspelled"
+        elif authorInfo.hits<2:
+            print "    got too few hits on wikipedia(%d ). This author name might be misspelled" % (authorInfo.hits)
+        elif authorInfo.hits>700:
+            print "    got many hits on wikipedia(%d). He should be an interesting read" % (authorInfo.hits)
             
         if len(authorInfo.suggestions):
-            print "    got suggestions: %s" % (authorInfo.suggestions)
+            print "    got suggestions: %s. You may have mispelled his name" % (authorInfo.suggestions)
         
         return True
     
