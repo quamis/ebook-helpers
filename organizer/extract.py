@@ -50,62 +50,108 @@ class FSWalker(object):
                 if doCall:
                     callback(os.path.join(root, name))
 
-        print("="*50)
+class EpubReader(object):
+    def __init__(self, path):
+        self.path = path
+        
+        self.author = None
+        self.language = None
+        self.title = None
+        
+        self.lines = None
+        self.words = None
+        
+    def process(self):
+        try:
+            book = epub.read_epub(self.path)
+        except:
+            return self
     
+        authors = []
+        languages = []
+        titles = []
+        
+        titles.append(book.title)
+        languages.append(book.language)
+        authors.append(self.getBookMetadata(book, 'DC', 'creator'))
+        titles.append(self.getBookMetadata(book, 'DC', 'title'))
+        languages.append(self.getBookMetadata(book, 'DC', 'subject'))
+        languages.append(self.getBookMetadata(book, 'DC', 'language'))
+        #print(book.metadata)
+        #print(book.properties)
+        
+        """
+            Items can be of type:
+              - ITEM_UNKNOWN = 0
+              - ITEM_IMAGE = 1
+              - ITEM_STYLE = 2
+              - ITEM_SCRIPT = 3
+              - ITEM_NAVIGATION = 4
+              - ITEM_VECTOR = 5
+              - ITEM_FONT = 6
+              - ITEM_VIDEO = 7
+              - ITEM_AUDIO = 8
+              - ITEM_DOCUMENT = 9
+        """
+        #for item in book.get_items_of_type(ebooklib.ITEM_IMAGE):
+        #    print(item)
+        
+        content = b""
+        for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
+            languages.append(item.get_language())
+            languages.append(item.lang)
+            #print(item.properties)
+            #print(item.get_content())
+            #with open('dump1-%05d.html' % (itemidx), 'wb') as f:
+            #    f.write(item.get_content())
+            
+            document = lxml.html.document_fromstring(item.get_content())
+            #print(document.text_content().encode("utf-8"))
+            #with open('dump2-%05d.html' % (itemidx), 'wb') as f:
+            #    f.write(document.text_content().encode('utf8'))
+            
+            content+= document.text_content().encode('utf8')
+            languages.append(guess_language.guess_language(document.text_content().encode('utf8').decode()))
+                
+        lst = [l for l in languages if not l in (None, 'UNKNOWN', 'UND', )]
+        if lst:
+            self.language = max(set(lst), key=lst.count)
+        
+        lst = [l for l in authors if not l in (None, )]
+        if lst:
+            self.author = max(set(lst), key=lst.count)
+        
+        lst = [l for l in titles if not l in (None, )]
+        if lst:
+            self.title = max(set(lst), key=lst.count)
+        
+        content = content.decode('utf8')
+        
+        content = re.sub(r"[\r\n]+", '\n', content)
+        content = re.sub(r"[-*]+", '', content)
+        self.lines = len(content.split("\n"))
+        
+        content = re.sub(r"[\s\W]+", ' ', content)
+        self.words = len([w for w in content.split(" ") if len(w)>3])
+        
+        return self
+        
+    def getBookMetadata(self, book, namespace, name):
+        try:
+            return book.get_metadata(namespace, name)[0][0]
+        except:
+            return None
+        
+        
+
 def handle_epub(path):
-    book = epub.read_epub(path)
-    print(path)
-    #print(dir(book))
-    #print(book.title)
-    print(book.language)
-    print(book.get_metadata('DC', 'creator')[0][0])
-    print(book.get_metadata('DC', 'title')[0][0])
-    print(book.get_metadata('DC', 'subject')[0][0])
-    print(book.get_metadata('DC', 'language')[0][0])
-    print(book.metadata)
-    #print(book.properties)
+    book = EpubReader(path).process()
     
-    """
-        Items can be of type:
-          - ITEM_UNKNOWN = 0
-          - ITEM_IMAGE = 1
-          - ITEM_STYLE = 2
-          - ITEM_SCRIPT = 3
-          - ITEM_NAVIGATION = 4
-          - ITEM_VECTOR = 5
-          - ITEM_FONT = 6
-          - ITEM_VIDEO = 7
-          - ITEM_AUDIO = 8
-          - ITEM_DOCUMENT = 9
-    """
-    for item in book.get_items_of_type(ebooklib.ITEM_IMAGE):
-        print(item)
-        
-    itemidx=0
-    for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
-        itemidx+=1
-        #print(dir(item))
-        #print(item.get_language())
-        #print(item.lang)
-        print(item.properties)
-        #print(item.get_content())
-        with open('dump1-%05d.html' % (itemidx), 'wb') as f:
-            f.write(item.get_content())
-        
-        document = lxml.html.document_fromstring(item.get_content())
-        #internally does: etree.XPath("string()")(document)
-        #print(document.text_content().encode("utf-8"))
-        with open('dump2-%05d.html' % (itemidx), 'wb') as f:
-            #print(chardet.detect(document.text_content().encode('utf8')))
-            print(guess_language.guess_language(document.text_content().encode('utf8').decode()))
-            #print(document.text_content().encode('utf8'))
-            f.write(document.text_content().encode('utf8'))
-            
-        
-            
+    print(path)
+    print("    [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
    
-    print("-"*50)
-    exit()
+    #print("-"*50)
+    #exit()
 
 if __name__ == '__main__':
     # handle args
@@ -115,3 +161,5 @@ if __name__ == '__main__':
     
     fsw = FSWalker(args['path'])
     fsw.addNameFilter(r'\.epub$').walk(handle_epub)
+    
+    print("=" * 50)
