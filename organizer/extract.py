@@ -71,6 +71,9 @@ if __name__ == '__main__':
     parser.add_argument('--path',  '-p',  dest='path',   action='store', type=str, default=None,  help='TODO')
     args = vars(parser.parse_args())
     
+    #logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(name)s %(levelname)s %(message)s')
+    logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(message)s')
+    
     fsw = FSWalker(args['path'])
     fsw.addNameFilter(r'\.epub$').walk(handle_file)
     

@@ -1,8 +1,8 @@
 # -** coding: utf-8 -*-
-import os, sys, re
+import os, sys, re, time
 import logging
-import google
-
+import google, requests
+import lxml.html
 
 class GoogleReader(object):
     def __init__(self, path):
@@ -15,6 +15,95 @@ class GoogleReader(object):
         self.lines = None
         self.words = None
         
+    def search_ro_wikipedia_org(self, query):
+        authors = []
+        titles = []
+        logging.getLogger('reader').debug("Try ro.wikipedia.org")
+        for url in google.search(query+" carte site:ro.wikipedia.org", tld='ro', num=5, stop=1):
+            logging.getLogger('reader').debug("    %s", url)
+            page = requests.get(url)
+            
+            xmldocument = lxml.html.document_fromstring(page.text)
+            text = " ".join(xmldocument.xpath("//*[@id='mw-content-text']//text()"))
+            
+            matches = re.finditer("(scris de|autor|autorul)[\s]+(?P<author>[^\.\,\n]+)", text, re.IGNORECASE)
+            for m in matches:
+                authors.append(m.group('author'))
+                
+            time.sleep(0.75)
+                
+        ret = {
+            'author': None,
+            'title': None,
+        }
+        
+        lst = [l for l in authors if not l in (None, '', )]
+        if lst:
+            ret['author'] = max(set(lst), key=lst.count)
+        
+        if ret['author']:
+            title = re.sub("|".join(ret['author'].split()), '', query, re.IGNORECASE)
+            ret['title'] = title
+        
+        return ret
+            
+    def search_en_wikipedia_org(self, query):
+        """ DELETE ALL THIS CODE
+        authors = []
+        titles = []
+        logging.getLogger('reader').debug("Try en.wikipedia.org")
+        for url in google.search(query+" book site:en.wikipedia.org", num=5, stop=1):
+            logging.getLogger('reader').debug("    %s", url)
+            page = requests.get(url)
+            
+            xmldocument = lxml.html.document_fromstring(page.text)
+            text = " ".join(xmldocument.xpath("//*[@id='mw-content-text']//text()"))
+
+            matches = re.finditer("(scris de|autor|autorul)[\s]+(?P<author>[^\.\,\n]+)", text, re.IGNORECASE)
+            for m in matches:
+                authors.append(m.group('author'))
+        """
+        ret = {
+            'author': None,
+            'title': None,
+        }
+        
+        return ret
+        
+    def search_amazon_com(self, query):
+        authors = []
+        titles = []
+        logging.getLogger('reader').debug("Try amazon.com")
+        for url in google.search(query+" book site:amazon.com", num=5, stop=1):
+            logging.getLogger('reader').debug("    %s", url)
+            page = requests.get(url)
+            
+            xmldocument = lxml.html.document_fromstring(page.text)
+            text = " ".join(xmldocument.xpath("//*[contains(@class, 'contributorNameID')]//text()"))
+
+            authors.append(text)
+            
+            time.sleep(2)
+                
+        ret = {
+            'author': None,
+            'title': None,
+        }
+        
+        lst = [l for l in authors if not l in (None, '', )]
+        print(lst)
+        if lst:
+            ret['author'] = max(set(lst), key=lst.count)
+        
+        if ret['author']:
+            title = re.sub("|".join(ret['author'].split()), '', query, re.IGNORECASE)
+            ret['title'] = title
+            
+        print(ret)
+        exit()
+        
+        return ret
+        
     def process(self):
         q = os.path.basename(self.path)
         q = re.sub(r"(epub|pdf|rtf)$", '', q, re.IGNORECASE)
@@ -22,13 +111,12 @@ class GoogleReader(object):
         q = re.sub(r"[\(\)\.\,\-]", '', q, re.IGNORECASE)
         q = re.sub(r"[\s]+", ' ', q, re.IGNORECASE)
         print(q)
+
+        #ret = self.search_ro_wikipedia_org(q)
         
-        for url in google.search(q+" wikipedia", tld='ro', stop=5):
-            print(url)
-            
-        print("-"*50)
-        for url in google.search(q+" amazon", stop=5):
-            print(url)
+        #ret = self.search_en_wikipedia_org(q)
+        
+        ret = self.search_amazon_com(q)
             
         exit()
         m = re.search(r"^[\s]*(?P<author>.+)[\s]*-[\s]*(?P<title>.+)[\s]*\.(?P<extension>epub|pdf|rtf)$", os.path.basename(self.path), re.IGNORECASE)
