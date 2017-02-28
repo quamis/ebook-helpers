@@ -15,6 +15,12 @@ class GoogleReader(object):
         self.lines = None
         self.words = None
         
+        self.attachedData = {}
+        
+    def attachParsedData(self, extractor, data):
+        self.attachedData[extractor] = data
+        return self
+        
     def search_ro_wikipedia_org(self, query):
         authors = []
         titles = []
@@ -34,16 +40,20 @@ class GoogleReader(object):
                 
         ret = {
             'author': None,
+            'authors': [],
             'title': None,
+            'titles': [],
         }
         
         lst = [l for l in authors if not l in (None, '', )]
         if lst:
             ret['author'] = max(set(lst), key=lst.count)
+            ret['authors'] = lst
         
         if ret['author']:
             title = re.sub("|".join(ret['author'].split()), '', query, re.IGNORECASE)
             ret['title'] = title
+            ret['titles'].append(ret['title'])
         
         return ret
             
@@ -65,7 +75,9 @@ class GoogleReader(object):
         """
         ret = {
             'author': None,
+            'authors': [],
             'title': None,
+            'titles': [],
         }
         
         return ret
@@ -87,20 +99,21 @@ class GoogleReader(object):
                 
         ret = {
             'author': None,
+            'authors': [],
             'title': None,
+            'titles': [],
         }
         
         lst = [l for l in authors if not l in (None, '', )]
         print(lst)
         if lst:
             ret['author'] = max(set(lst), key=lst.count)
+            ret['authors'] = lst
         
         if ret['author']:
             title = re.sub("|".join(ret['author'].split()), '', query, re.IGNORECASE)
             ret['title'] = title
-            
-        print(ret)
-        exit()
+            ret['titles'].append(ret['title'])
         
         return ret
         
@@ -112,12 +125,13 @@ class GoogleReader(object):
         q = re.sub(r"[\s]+", ' ', q, re.IGNORECASE)
         print(q)
 
-        #ret = self.search_ro_wikipedia_org(q)
+        collectedData = []
+        collectedData.append(self.search_ro_wikipedia_org(q))
+        collectedData.append(self.search_en_wikipedia_org(q))
+        collectedData.append(self.search_amazon_com(q))
         
-        #ret = self.search_en_wikipedia_org(q)
+        print(collectedData)
         
-        ret = self.search_amazon_com(q)
-            
         exit()
         m = re.search(r"^[\s]*(?P<author>.+)[\s]*-[\s]*(?P<title>.+)[\s]*\.(?P<extension>epub|pdf|rtf)$", os.path.basename(self.path), re.IGNORECASE)
         if m:

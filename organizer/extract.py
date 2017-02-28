@@ -52,14 +52,17 @@ class FSWalker(object):
 def handle_file(path):
     print(path)
     
-    book = Reader.EpubReader.EpubReader(path).process()
-    print("    EpubReader:     [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
+    book1 = Reader.FilenameReader.FilenameReader(path).process()
+    print("    FilenameReader: [%2s] %s - %s    [%s lines, %s words]" %(book1.language, book1.author, book1.title, book1.lines, book1.words))
     
-    book = Reader.FilenameReader.FilenameReader(path).process()
-    print("    FilenameReader: [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
+    book2 = Reader.EpubReader.EpubReader(path).process()
+    print("    EpubReader:     [%2s] %s - %s    [%s lines, %s words]" %(book2.language, book2.author, book2.title, book2.lines, book2.words))
     
-    book = Reader.GoogleReader.GoogleReader(path).process()
-    print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
+    book3 = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
+    print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book3.language, book3.author, book3.title, book3.lines, book3.words))
+    
+    book = Reader.StatisticsReader.StatisticsReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).attachParsedData('GoogleReader', book3).process()
+    print("    StatisticsReader  : [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
     
    
     #print("-"*50)
