@@ -1,6 +1,7 @@
 # -** coding: utf-8 -*-
 import os, sys, re, time
 import logging
+import json
 
 class StatisticsReader(object):
     def __init__(self, path):
@@ -15,9 +16,71 @@ class StatisticsReader(object):
         
         self.attachedData = {}
         
+        self.list = []
+        
     def attachParsedData(self, extractor, data):
         self.attachedData[extractor] = data
         return self
         
+    def has_book(self, author, title, extractor):
+        for b in self.list:
+            if b['author']==author and b['title']==title and b['extractor']==extractor:
+                return True
+        return False
+        
+    def append_book(self, author, title, extractor):
+        self.list.append({
+            'author':       author,
+            'title':        title,
+            'extractor':    extractor,
+        })
+        
+    def groupedByAuthorAndTitle(self):
+        tree = {}
+        for b in self.list:
+            if not b['author'] in tree:
+                tree[b['author']] = {}
+                
+            if not b['title'] in tree[b['author']]:
+                tree[b['author']][b['title']] = []
+                
+            tree[b['author']][b['title']].append(b['extractor'])
+        
+        return tree
+        
+    def groupedByTitleAndAuthor(self):
+        tree = {}
+        for b in self.list:
+            if not b['title'] in tree:
+                tree[b['title']] = {}
+                
+            if not b['author'] in tree[b['title']]:
+                tree[b['title']][b['author']] = []
+                
+            tree[b['title']][b['author']].append(b['extractor'])
+        
+        return tree
+        
     def process(self):
+        if os.path.exists('StatisticsReader.tree.json'):
+            with open('StatisticsReader.tree.json', 'rb') as f:
+                self.list = json.loads(f.read().decode('utf-8'))
+            
+            
+        for extractor in self.attachedData:
+            author = self.attachedData[extractor].author
+            title = self.attachedData[extractor].title
+            
+            author = author.strip()
+            title = title.strip()
+            
+            if not self.has_book(author, title, extractor):
+                self.append_book(author, title, extractor)
+                
+        with open('StatisticsReader.tree.json', 'wt') as f:
+            json.dump(self.list, f, indent=4, sort_keys=True)
+        
+        #print(json.dumps(self.groupedByAuthorAndTitle(), indent=4, sort_keys=True))
+        #print(json.dumps(self.groupedByTitleAndAuthor(), indent=4, sort_keys=True))
+        
         return self

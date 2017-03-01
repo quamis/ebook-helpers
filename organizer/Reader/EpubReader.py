@@ -71,7 +71,7 @@ class EpubReader(object):
             content+= document.text_content().encode('utf8')
             languages.append(guess_language.guess_language(document.text_content().encode('utf8').decode()))
                 
-        lst = [l for l in languages if not l in (None, 'UNKNOWN', 'UND', )]
+        lst = [l.lower() for l in languages if not l in (None, 'UNKNOWN', 'UND', )]
         if lst:
             self.language = max(set(lst), key=lst.count)
         

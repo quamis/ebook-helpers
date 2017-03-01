@@ -15,9 +15,14 @@ class FilenameReader(object):
         self.words = None
         
     def process(self):
-        m = re.search(r"^[\s]*(?P<author>.+)[\s]*-[\s]*(?P<title>.+)[\s]*\.(?P<extension>epub|pdf|rtf)$", os.path.basename(self.path), re.IGNORECASE)
+        print(os.path.basename(self.path))
+        m = re.search(r"^[\s]*(?P<author>.+)[\s]*-[\s]*(?P<title>.+?)[\s]*(\((?P<language>(EN|FR|RO))\))?[\s]*\.(?P<extension>epub|pdf|rtf)$", os.path.basename(self.path), re.IGNORECASE)
+        print(m.groups())
         if m:
             self.author = m.group('author')
             self.title = m.group('title')
+            
+            if m.group('language'):
+                self.language = m.group('language').lower()
     
         return self

@@ -6,10 +6,12 @@ import argparse
 import Reader.EpubReader
 import Reader.FilenameReader
 import Reader.GoogleReader
+import Reader.StatisticsReader
 
 ## export PYTHONIOENCODING="utf-8"
 # pip install guess_language-spirit
 # rm dump*.html; py ./extract.py --path=/d/nextcloud/EBooks/
+# rm *.json;  py ./extract.py --path=/d/nextcloud/EBooks/testing-ebook-organizer/
 
 
 """
@@ -58,11 +60,15 @@ def handle_file(path):
     book2 = Reader.EpubReader.EpubReader(path).process()
     print("    EpubReader:     [%2s] %s - %s    [%s lines, %s words]" %(book2.language, book2.author, book2.title, book2.lines, book2.words))
     
-    book3 = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
-    print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book3.language, book3.author, book3.title, book3.lines, book3.words))
+    #book3 = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
+    #print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book3.language, book3.author, book3.title, book3.lines, book3.words))
     
-    book = Reader.StatisticsReader.StatisticsReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).attachParsedData('GoogleReader', book3).process()
-    print("    StatisticsReader  : [%2s] %s - %s    [%s lines, %s words]" %(book.language, book.author, book.title, book.lines, book.words))
+    book4 = Reader.StatisticsReader.StatisticsReader(path)\
+        .attachParsedData('FilenameReader', book1)\
+        .attachParsedData('EpubReader', book2)\
+        .process()
+        
+    print("    StatisticsReader  : [%2s] %s - %s    [%s lines, %s words]" %(book4.language, book4.author, book4.title, book4.lines, book4.words))
     
    
     #print("-"*50)
