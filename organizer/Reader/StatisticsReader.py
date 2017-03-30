@@ -2,6 +2,7 @@
 import os, sys, re, time
 import logging
 import json
+from collections import OrderedDict
 
 class StatisticsReader(object):
     def __init__(self, path):
@@ -59,27 +60,37 @@ class StatisticsReader(object):
                 
             tree[b['title']][b['author']].append(b['extractor'])
         
-        return tree
+        tree_ordered = [OrderedDict(sorted(tree.items(), key=lambda item: ('' if item[0] is None else item[0]))) for item in tree]
         
-    def process(self):
+        return tree_ordered
+        
+    def loadCache(self):
         if os.path.exists('StatisticsReader.tree.json'):
             with open('StatisticsReader.tree.json', 'rb') as f:
                 self.list = json.loads(f.read().decode('utf-8'))
+                
+    def saveCache(self):
+        with open('StatisticsReader.tree.json', 'wt') as f:
+            json.dump(self.list, f, indent=4, sort_keys=True)
             
-            
+    def process(self):
+        self.loadCache()
+        
         for extractor in self.attachedData:
             author = self.attachedData[extractor].author
             title = self.attachedData[extractor].title
             
-            author = author.strip()
-            title = title.strip()
+            if author:
+                author = author.strip()
+                
+            if title:
+                title = title.strip()
             
             if not self.has_book(author, title, extractor):
                 self.append_book(author, title, extractor)
                 
-        with open('StatisticsReader.tree.json', 'wt') as f:
-            json.dump(self.list, f, indent=4, sort_keys=True)
         
+        self.saveCache()
         #print(json.dumps(self.groupedByAuthorAndTitle(), indent=4, sort_keys=True))
         #print(json.dumps(self.groupedByTitleAndAuthor(), indent=4, sort_keys=True))
         

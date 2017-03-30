@@ -63,6 +63,7 @@ def handle_file(path):
     #book3 = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
     #print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book3.language, book3.author, book3.title, book3.lines, book3.words))
     
+    
     book4 = Reader.StatisticsReader.StatisticsReader(path)\
         .attachParsedData('FilenameReader', book1)\
         .attachParsedData('EpubReader', book2)\
