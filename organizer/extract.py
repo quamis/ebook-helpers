@@ -2,6 +2,7 @@
 import os, sys, re
 import logging
 import argparse
+import functools
 
 import Reader.EpubReader
 import Reader.FilenameReader
@@ -50,41 +51,53 @@ class FSWalker(object):
 
         
         
-
-def handle_file(path):
-    print(path)
-    
-    book1 = Reader.FilenameReader.FilenameReader(path).process()
-    print("    FilenameReader: [%2s] %s - %s    [%s lines, %s words]" %(book1.language, book1.author, book1.title, book1.lines, book1.words))
-    
-    book2 = Reader.EpubReader.EpubReader(path).process()
-    print("    EpubReader:     [%2s] %s - %s    [%s lines, %s words]" %(book2.language, book2.author, book2.title, book2.lines, book2.words))
-    
-    #book3 = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
-    #print("    GoogleReader  : [%2s] %s - %s    [%s lines, %s words]" %(book3.language, book3.author, book3.title, book3.lines, book3.words))
-    
-    
-    book4 = Reader.StatisticsReader.StatisticsReader(path)\
-        .attachParsedData('FilenameReader', book1)\
-        .attachParsedData('EpubReader', book2)\
-        .process()
+class FileHandler(object):
+    def __init__(self, reader, updateStatistics):
+        self.reader = reader
+        self.updateStatistics = updateStatistics
+        self.dirname = None
         
-    print("    StatisticsReader  : [%2s] %s - %s    [%s lines, %s words]" %(book4.language, book4.author, book4.title, book4.lines, book4.words))
+    def handle_file(self, path):
+        dirname = os.path.dirname(path)
+        if dirname!=self.dirname:
+            print("%s" % (dirname))
+            self.dirname = dirname
     
-   
-    #print("-"*50)
-    #exit()
+        print("    %s" % (os.path.basename(path)))
+        
+        book = None
+        
+        if self.reader=="FilenameReader":
+            book = Reader.FilenameReader.FilenameReader(path).process()
+        elif self.reader=="EpubReader":
+            book = Reader.EpubReader.EpubReader(path).process()
+        else:
+            raise Exception("Unknown eader specified: %s" % (self.reader))
+        
+        #book = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
+        
+        print("      < %10s: [%2s] %s - %s    [%s lines, %s words]" %(self.reader, book.language, book.author, book.title, book.lines, book.words))
+        
+        if self.updateStatistics:
+            Reader.StatisticsReader.StatisticsReader(path)\
+                .attachParsedData(self.reader, book)\
+                .process()
+            
+        #print("-"*50)
+        #exit()
 
 if __name__ == '__main__':
     # handle args
     parser = argparse.ArgumentParser(description='TODO')
-    parser.add_argument('--path',  '-p',  dest='path',   action='store', type=str, default=None,  help='TODO')
+    parser.add_argument('--path',  dest='path',   action='store', type=str, default=None,  help='TODO')
+    parser.add_argument('--updateStatistics',  dest='updateStatistics',   action='store', type=int, default=0,  help='TODO')
+    parser.add_argument('--reader',  dest='reader',   action='store', type=str, default=None,  help='TODO')
     args = vars(parser.parse_args())
     
-    #logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(name)s %(levelname)s %(message)s')
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(message)s')
     
     fsw = FSWalker(args['path'])
-    fsw.addNameFilter(r'\.epub$').walk(handle_file)
+    fsh = FileHandler(args['reader'], args['updateStatistics'])
+    fsw.addNameFilter(r'\.epub$').walk(fsh.handle_file)
     
     print("=" * 50)
