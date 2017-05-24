@@ -5,8 +5,9 @@ import json
 from collections import OrderedDict
 
 class StatisticsReader(object):
-    def __init__(self, path):
+    def __init__(self, path, db):
         self.path = path
+        self.db = db
         
         self.author = None
         self.language = None
@@ -65,12 +66,12 @@ class StatisticsReader(object):
         return tree_ordered
         
     def loadCache(self):
-        if os.path.exists('StatisticsReader.tree.json'):
-            with open('StatisticsReader.tree.json', 'rb') as f:
+        if os.path.exists(self.db):
+            with open(self.db, 'rb') as f:
                 self.list = json.loads(f.read().decode('utf-8'))
                 
     def saveCache(self):
-        with open('StatisticsReader.tree.json', 'wt') as f:
+        with open(self.db, 'wt') as f:
             json.dump(self.list, f, indent=4, sort_keys=True)
             
     def process(self):

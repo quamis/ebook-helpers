@@ -52,9 +52,11 @@ class FSWalker(object):
         
         
 class FileHandler(object):
-    def __init__(self, reader, updateStatistics):
+    def __init__(self, reader, updateStatistics, db):
         self.reader = reader
         self.updateStatistics = updateStatistics
+        self.db = db
+        
         self.dirname = None
         
     def handle_file(self, path):
@@ -79,7 +81,7 @@ class FileHandler(object):
         print("      < %10s: [%2s] %s - %s    [%s lines, %s words]" %(self.reader, book.language, book.author, book.title, book.lines, book.words))
         
         if self.updateStatistics:
-            Reader.StatisticsReader.StatisticsReader(path)\
+            Reader.StatisticsReader.StatisticsReader(path, self.db)\
                 .attachParsedData(self.reader, book)\
                 .process()
             
@@ -92,12 +94,13 @@ if __name__ == '__main__':
     parser.add_argument('--path',  dest='path',   action='store', type=str, default=None,  help='TODO')
     parser.add_argument('--updateStatistics',  dest='updateStatistics',   action='store', type=int, default=0,  help='TODO')
     parser.add_argument('--reader',  dest='reader',   action='store', type=str, default=None,  help='TODO')
+    parser.add_argument('--db',  dest='db',   action='store', type=str, default=None,  help='TODO')
     args = vars(parser.parse_args())
     
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(message)s')
     
     fsw = FSWalker(args['path'])
-    fsh = FileHandler(args['reader'], args['updateStatistics'])
+    fsh = FileHandler(args['reader'], args['updateStatistics'], args['db'])
     fsw.addNameFilter(r'\.epub$').walk(fsh.handle_file)
     
     print("=" * 50)

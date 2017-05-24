@@ -21,7 +21,7 @@ if __name__ == '__main__':
     #logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(name)s %(levelname)s %(message)s')
     logging.basicConfig(level=logging.NOTSET, format='%(asctime)s %(message)s')
     
-    stats = Reader.StatisticsReader.StatisticsReader(None)
+    stats = Reader.StatisticsReader.StatisticsReader(None, args['db'])
         
     stats.loadCache()
     #stats.groupedByAuthorAndTitle()
