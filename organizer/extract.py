@@ -81,9 +81,11 @@ class FileHandler(object):
         print("      < %10s: [%2s] %s - %s    [%s lines, %s words]" %(self.reader, book.language, book.author, book.title, book.lines, book.words))
         
         if self.updateStatistics:
-            Reader.StatisticsReader.StatisticsReader(path, self.db)\
-                .attachParsedData(self.reader, book)\
-                .process()
+            Reader.StatisticsReader.StatisticsReader(self.db)\
+                .attachParsedData(self.reader, path, book)\
+                .loadCache()\
+                .deduplicate()\
+                .saveCache()
             
         #print("-"*50)
         #exit()

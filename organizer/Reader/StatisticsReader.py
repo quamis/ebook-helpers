@@ -5,8 +5,7 @@ import json
 from collections import OrderedDict
 
 class StatisticsReader(object):
-    def __init__(self, path, db):
-        self.path = path
+    def __init__(self, db):
         self.db = db
         
         self.author = None
@@ -16,25 +15,26 @@ class StatisticsReader(object):
         self.lines = None
         self.words = None
         
-        self.attachedData = {}
+        self.attachedData = []
         
         self.list = []
         
-    def attachParsedData(self, extractor, data):
-        self.attachedData[extractor] = data
+    def attachParsedData(self, reader, path, book):
+        self.attachedData.append({ 'reader':reader, 'path':path, 'book':book })
         return self
         
-    def has_book(self, author, title, extractor):
+    def has_book(self, data):
         for b in self.list:
-            if b['author']==author and b['title']==title and b['extractor']==extractor:
+            if b['author']==data['book'].author and b['title']==data['book'].title and b['reader']==data['reader'] and b['path']==data['path']:
                 return True
         return False
         
-    def append_book(self, author, title, extractor):
+    def append_book(self, data):
         self.list.append({
-            'author':       author,
-            'title':        title,
-            'extractor':    extractor,
+            'path':         data['path'],
+            'reader':       data['reader'],
+            'author':       data['book'].author,
+            'title':        data['book'].title,
         })
         
     def groupedByAuthorAndTitle(self):
@@ -46,7 +46,7 @@ class StatisticsReader(object):
             if not b['title'] in tree[b['author']]:
                 tree[b['author']][b['title']] = []
                 
-            tree[b['author']][b['title']].append(b['extractor'])
+            tree[b['author']][b['title']].append(b['reader'])
         
         return tree
         
@@ -59,7 +59,7 @@ class StatisticsReader(object):
             if not b['author'] in tree[b['title']]:
                 tree[b['title']][b['author']] = []
                 
-            tree[b['title']][b['author']].append(b['extractor'])
+            tree[b['title']][b['author']].append(b['reader'])
         
         tree_ordered = [OrderedDict(sorted(tree.items(), key=lambda item: ('' if item[0] is None else item[0]))) for item in tree]
         
@@ -69,17 +69,18 @@ class StatisticsReader(object):
         if os.path.exists(self.db):
             with open(self.db, 'rb') as f:
                 self.list = json.loads(f.read().decode('utf-8'))
+        return self
                 
     def saveCache(self):
         with open(self.db, 'wt') as f:
             json.dump(self.list, f, indent=4, sort_keys=True)
+        return self
             
-    def process(self):
-        self.loadCache()
-        
-        for extractor in self.attachedData:
-            author = self.attachedData[extractor].author
-            title = self.attachedData[extractor].title
+    def deduplicate(self):
+        for data in self.attachedData:
+            path = data['path']
+            author = data['book'].author
+            title = data['book'].title
             
             if author:
                 author = author.strip()
@@ -87,12 +88,8 @@ class StatisticsReader(object):
             if title:
                 title = title.strip()
             
-            if not self.has_book(author, title, extractor):
-                self.append_book(author, title, extractor)
+            if not self.has_book(data):
+                self.append_book(data)
                 
-        
-        self.saveCache()
-        #print(json.dumps(self.groupedByAuthorAndTitle(), indent=4, sort_keys=True))
-        #print(json.dumps(self.groupedByTitleAndAuthor(), indent=4, sort_keys=True))
         
         return self
