@@ -96,6 +96,7 @@ if __name__ == '__main__':
     parser.add_argument('--path',  dest='path',   action='store', type=str, default=None,  help='TODO')
     parser.add_argument('--updateStatistics',  dest='updateStatistics',   action='store', type=int, default=0,  help='TODO')
     parser.add_argument('--reader',  dest='reader',   action='store', type=str, default=None,  help='TODO')
+    parser.add_argument('--regexPattern',  dest='regexPattern',   action='store', type=str, default='\.epub$',  help='TODO')
     parser.add_argument('--db',  dest='db',   action='store', type=str, default=None,  help='TODO')
     args = vars(parser.parse_args())
     
@@ -103,6 +104,6 @@ if __name__ == '__main__':
     
     fsw = FSWalker(args['path'])
     fsh = FileHandler(args['reader'], args['updateStatistics'], args['db'])
-    fsw.addNameFilter(r'\.epub$').walk(fsh.handle_file)
+    fsw.addNameFilter(args['regexPattern']).walk(fsh.handle_file)
     
     print("=" * 50)
