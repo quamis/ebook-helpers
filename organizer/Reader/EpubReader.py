@@ -69,7 +69,10 @@ class EpubReader(object):
             #    f.write(document.text_content().encode('utf8'))
             
             content+= document.text_content().encode('utf8')
-            languages.append(guess_language.guess_language(document.text_content().encode('utf8').decode()))
+            try:
+                languages.append(guess_language.guess_language(document.text_content().encode('utf8').decode()))
+            except UnicodeDecodeError:
+                languages.append(guess_language.guess_language(document.text_content()))
                 
         lst = [l.lower() for l in languages if not l in (None, 'UNKNOWN', 'UND', )]
         if lst:

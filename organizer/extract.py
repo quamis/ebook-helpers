@@ -10,15 +10,16 @@ import Reader.GoogleReader
 import Reader.StatisticsReader
 
 ## export PYTHONIOENCODING="utf-8"
-# pip install guess_language-spirit
 # rm dump*.html; py ./extract.py --path=/d/nextcloud/EBooks/
-# rm *.json;  py ./extract.py --path=/d/nextcloud/EBooks/testing-ebook-organizer/
+# rm *.json;  py ./extract.py --updateStatistics=0 --reader=EpubReader --regexPattern='\.epub$' --db=stats.json --path=/d/nextcloud/EBooks/testing-ebook-organizer/
+# rm *.json;  py ./extract.py --updateStatistics=0 --reader=EpubReader --regexPattern='\.epub$' --db=stats.json --path=/media/BIG/books/ro/
 
 
 """
-pip install epubzilla
-pip install chartdet
+pip install ebooklib
 pip install guess_language-spirit
+pip install google
+pip install requests
 """
 
 class FSWalker(object):
@@ -78,7 +79,7 @@ class FileHandler(object):
         
         #book = Reader.GoogleReader.GoogleReader(path).attachParsedData('FilenameReader', book1).attachParsedData('EpubReader', book2).process()
         
-        print("      < %10s: [%2s] %s - %s    [%s lines, %s words]" %(self.reader, book.language, book.author, book.title, book.lines, book.words))
+        print("      <%10s>: [%2s] %s - %s    [%s lines, %s words]" %(self.reader, book.language, book.author, book.title, book.lines, book.words))
         
         if self.updateStatistics:
             Reader.StatisticsReader.StatisticsReader(self.db)\
