@@ -1,4 +1,4 @@
-# -** coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import os, sys, re
 import logging
 import argparse
@@ -13,6 +13,13 @@ import Reader.StatisticsReader
 # rm dump*.html; py ./extract.py --path=/d/nextcloud/EBooks/
 # rm *.json;  py ./extract.py --updateStatistics=0 --reader=EpubReader --regexPattern='\.epub$' --db=stats.json --path=/d/nextcloud/EBooks/testing-ebook-organizer/
 # rm *.json;  py ./extract.py --updateStatistics=0 --reader=EpubReader --regexPattern='\.epub$' --db=stats.json --path=/media/BIG/books/ro/
+
+# rebuild db:
+"""
+rm *.json; py ./extract.py --updateStatistics=1 --reader=EpubReader --regexPattern='\.epub$' --db=stats.json --path=/d/nextcloud/EBooks/testing-ebook-organizer/; py ./extract.py --updateStatistics=1 --reader=FilenameReader --regexPattern='\.epub$' --db=stats.json --path=/d/nextcloud/EBooks/testing-ebook-organizer/;
+py ./statistics.py --db=stats.json
+
+"""
 
 
 """

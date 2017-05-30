@@ -78,11 +78,11 @@ class EpubReader(object):
         if lst:
             self.language = max(set(lst), key=lst.count)
         
-        lst = [l for l in authors if not l in (None, )]
+        lst = [l.strip() for l in authors if not l in (None, )]
         if lst:
             self.author = max(set(lst), key=lst.count)
         
-        lst = [l for l in titles if not l in (None, )]
+        lst = [l.strip() for l in titles if not l in (None, )]
         if lst:
             self.title = max(set(lst), key=lst.count)
         

@@ -24,8 +24,12 @@ if __name__ == '__main__':
     stats = Reader.StatisticsReader.StatisticsReader(args['db'])
         
     stats.loadCache()
-    #stats.groupedByAuthorAndTitle()
-    print(json.dumps(stats.groupedByAuthorAndTitle(), indent=4))
+    
+    for (author, books) in stats.groupedByAuthorAndTitle().items():
+        print(author)
+        #print(books)
+        
+    #print(json.dumps(stats.groupedByAuthorAndTitle(), indent=4))
     
     
     print("=" * 50)
