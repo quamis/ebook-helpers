@@ -25,11 +25,29 @@ if __name__ == '__main__':
         
     stats.loadCache()
     
+    authors = []
     for (author, books) in stats.groupedByAuthorAndTitle().items():
-        print(author)
+        authors.append(author)
         #print(books)
+        
+    for (author, books) in stats.groupedByAuthorAndTitle().items():
+        for (book, d) in books.items():
+            if not (book in authors):
+                #print("    this book might be an author: %s" % (book))
+                print("    author: %s" % (author))
         
     #print(json.dumps(stats.groupedByAuthorAndTitle(), indent=4))
     
+
+    """
+    for fixing author/titles, there some cases:
+        - titles are slightly different, the longer one might contain more details
+        - author and title are reversed between readers
+        
+        
+    we should: 
+        - build a list of validated authors, with possible aliases
+        - from this, we might get more certain about what the book title actually is
+    """
     
     print("=" * 50)
